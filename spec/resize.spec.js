@@ -22,6 +22,7 @@ describe('Resize TestCase', function () {
     it('should reset toolbar position on window resize', function () {
         var editor = new MediumEditor('.editor');
         selectElementContents(editor.elements[0]);
+        // console.log(editor.elements[0]);
         fireEvent(editor.elements[0], 'mouseup');
         jasmine.clock().tick(101);
         expect(editor.toolbar.className.indexOf('active') > -1).toBe(true);

@@ -134,7 +134,8 @@ describe('Extensions TestCase', function () {
                     'two': extTwo
                 }
             });
-
+            // console.log(editor instanceof MediumEditor);
+            // console.log(extOne.base instanceof MediumEditor);
             expect(editor instanceof MediumEditor).toBeTruthy();
             expect(extOne.base instanceof MediumEditor).toBeTruthy();
             expect(extTwo.base).toBeUndefined();
