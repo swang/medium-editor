@@ -503,25 +503,25 @@ if (typeof module === 'object') {
                 i,
                 realDoc = (this.options.elementsContainer.ownerDocument || document);
 
-            this.checkSelectionWrapper = function (e) {
+            var checkSelectionWrapper = function (e) {
 
                 // Do not close the toolbar when bluring the editable area and clicking into the anchor form
                 if (e && self.clickingIntoArchorForm(e)) {
                     return false;
                 }
-
+                console.log('checkSelectionWrapper', e)
                 clearTimeout(timer);
                 timer = setTimeout(function () {
                     self.checkSelection();
                 }, self.options.delay);
             };
 
-            realDoc.documentElement.addEventListener('mouseup', this.checkSelectionWrapper);
+            document.documentElement.addEventListener('mouseup', checkSelectionWrapper);
 
             for (i = 0; i < this.elements.length; i += 1) {
-                this.elements[i].addEventListener('mouseup', this.checkSelectionWrapper);
-                this.elements[i].addEventListener('keyup', this.checkSelectionWrapper);
-                this.elements[i].addEventListener('blur', this.checkSelectionWrapper);
+                // this.elements[i].addEventListener('mouseup', this.checkSelectionWrapper);
+                this.elements[i].addEventListener('keyup', checkSelectionWrapper);
+                this.elements[i].addEventListener('blur', checkSelectionWrapper);
             }
             return this;
         },
@@ -529,7 +529,7 @@ if (typeof module === 'object') {
         checkSelection: function () {
             var newSelection,
                 selectionElement;
-
+            console.log("checkSelection");
             if (this.keepToolbarAlive !== true && !this.options.disableToolbar) {
                 newSelection = (document.activeElement.contentWindow || window).getSelection();
                 if (newSelection.toString().trim() === '' ||
@@ -626,11 +626,11 @@ if (typeof module === 'object') {
             if (boundary.top < buttonHeight) {
                 this.toolbar.classList.add('medium-toolbar-arrow-over');
                 this.toolbar.classList.remove('medium-toolbar-arrow-under');
-                this.toolbar.style.top = buttonHeight + boundary.bottom - this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
+                this.toolbar.style.top = document.activeElement.offsetTop + buttonHeight + boundary.bottom - this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
             } else {
                 this.toolbar.classList.add('medium-toolbar-arrow-under');
                 this.toolbar.classList.remove('medium-toolbar-arrow-over');
-                this.toolbar.style.top = boundary.top + this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
+                this.toolbar.style.top = document.activeElement.offsetTop + boundary.top + this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
             }
             if (middleBoundary < halfOffsetWidth) {
                 this.toolbar.style.left = defaultLeft + halfOffsetWidth + 'px';
@@ -684,6 +684,7 @@ if (typeof module === 'object') {
                 i,
                 self = this,
                 triggerAction = function (e) {
+                    console.log("trigger: ", e)
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -700,7 +701,7 @@ if (typeof module === 'object') {
                     }
                 };
             for (i = 0; i < buttons.length; i += 1) {
-
+                // buttons[i].style.zIndex = 100;
                 buttons[i].addEventListener('click', triggerAction);
             }
 
