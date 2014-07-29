@@ -12,6 +12,21 @@ if (typeof module === 'object') {
 (function (window, document) {
     'use strict';
 
+    function realDoc() {
+        var isIFrame = document.activeElement.contentWindow;
+        if (isIFrame) {
+            return isIFrame.document;
+        }
+        return document;
+    }
+    function realWin() {
+        var isIFrame = document.activeElement.contentWindow;
+        if (isIFrame) {
+            return isIFrame;
+        }
+        return window;
+    }
+
     function extend(b, a) {
         var prop;
         if (b === undefined) {
@@ -31,7 +46,7 @@ if (typeof module === 'object') {
         var i,
             len,
             ranges,
-            sel = (document.activeElement.contentWindow || window).getSelection();
+            sel = realWin().getSelection();
 
         if (sel.getRangeAt && sel.rangeCount) {
             ranges = [];
@@ -46,7 +61,7 @@ if (typeof module === 'object') {
     function restoreSelection(savedSel) {
         var i,
             len,
-            sel = (document.activeElement.contentWindow || window).getSelection();
+            sel = realWin().getSelection();
 
         if (savedSel) {
             sel.removeAllRanges();
@@ -59,8 +74,7 @@ if (typeof module === 'object') {
     // http://stackoverflow.com/questions/1197401/how-can-i-get-the-element-the-caret-is-in-with-javascript-when-using-contentedi
     // by You
     function getSelectionStart() {
-        var realDoc = (document.activeElement.ownerDocument || document),
-            node = realDoc.getSelection().anchorNode,
+        var node = realDoc().getSelection().anchorNode,
             startNode = (node && node.nodeType === 3 ? node.parentNode : node);
         return startNode;
     }
@@ -72,12 +86,10 @@ if (typeof module === 'object') {
             html = '',
             sel,
             len,
-            container,
-            realWin = (document.activeElement.contentWindow || window),
-            realDoc = (document.activeElement.ownerDocument || document);
+            container;
 
-        if (realWin.getSelection !== undefined) {
-            sel = realWin.getSelection();
+        if (realWin().getSelection !== undefined) {
+            sel = realWin().getSelection();
             if (sel.rangeCount) {
                 container = document.createElement('div');
                 for (i = 0, len = sel.rangeCount; i < len; i += 1) {
@@ -85,9 +97,9 @@ if (typeof module === 'object') {
                 }
                 html = container.innerHTML;
             }
-        } else if (realDoc.selection !== undefined) {
-            if (realDoc.selection.type === 'Text') {
-                html = realDoc.selection.createRange().htmlText;
+        } else if (this.selection !== undefined) {
+            if (this.selection.type === 'Text') {
+                html = this.selection.createRange().htmlText;
             }
         }
         return html;
@@ -259,8 +271,7 @@ if (typeof module === 'object') {
         },
 
         bindParagraphCreation: function (index) {
-            var self = this,
-                realDocu = (document.activeElement.ownerDocument || document);
+            var self = this;
 
             this.elements[index].addEventListener('keypress', function (e) {
                 var node = getSelectionStart(),
@@ -268,7 +279,7 @@ if (typeof module === 'object') {
                 if (e.which === 32) {
                     tagName = node.tagName.toLowerCase();
                     if (tagName === 'a') {
-                        realDocu.execCommand('unlink', false, null);
+                        realDoc().execCommand('unlink', false, null);
                     }
                 }
             });
@@ -277,7 +288,7 @@ if (typeof module === 'object') {
                 var node = getSelectionStart(),
                     tagName;
                 if (node && node.getAttribute('data-medium-element') && node.children.length === 0 && !(self.options.disableReturn || node.getAttribute('data-disable-return'))) {
-                    realDocu.execCommand('formatBlock', false, 'p');
+                    realDoc().execCommand('formatBlock', false, 'p');
                 }
                 if (e.which === 13) {
                     node = getSelectionStart();
@@ -285,10 +296,10 @@ if (typeof module === 'object') {
                     if (!(self.options.disableReturn || this.getAttribute('data-disable-return')) &&
                         tagName !== 'li' && !self.isListItemChild(node)) {
                         if (!e.shiftKey) {
-                            realDocu.execCommand('formatBlock', false, 'p');
+                            realDoc().execCommand('formatBlock', false, 'p');
                         }
                         if (tagName === 'a') {
-                            realDocu.execCommand('unlink', false, null);
+                            realDoc().execCommand('unlink', false, null);
                         }
                     }
                 }
@@ -331,14 +342,13 @@ if (typeof module === 'object') {
         },
 
         bindTab: function (index) {
-            var realDocu = (document.activeElement.ownerDocument || document);
             this.elements[index].addEventListener('keydown', function (e) {
                 if (e.which === 9) {
                     // Override tab only for pre nodes
                     var tag = getSelectionStart().tagName.toLowerCase();
                     if (tag === 'pre') {
                         e.preventDefault();
-                        realDocu.execCommand('insertHtml', null, '    ');
+                        realDoc().execCommand('insertHtml', null, '    ');
                     }
                 }
             });
@@ -433,9 +443,7 @@ if (typeof module === 'object') {
         },
 
         createToolbar: function () {
-
-            var realDoc = (document.activeElement.ownerDocument || document),
-                toolbar = realDoc.createElement('div');
+            var toolbar = realDoc().createElement('div');
             toolbar.id = 'medium-editor-toolbar-' + this.id;
             toolbar.className = 'medium-editor-toolbar';
             toolbar.appendChild(this.toolbarButtons());
@@ -500,46 +508,52 @@ if (typeof module === 'object') {
         bindSelect: function () {
             var self = this,
                 timer = '',
-                i,
-                realDoc = (this.options.elementsContainer.ownerDocument || document);
+                i;
+                // realDoc = (this.options.elementsContainer.ownerDocument || document);
 
             var checkSelectionWrapper = function (e) {
-
                 // Do not close the toolbar when bluring the editable area and clicking into the anchor form
                 if (e && self.clickingIntoArchorForm(e)) {
                     return false;
                 }
-                console.log('checkSelectionWrapper', e)
+                console.log('checkSelectionWrapper', e, document.activeElement, realDoc(), realWin())
                 clearTimeout(timer);
+                var t = realWin();
+                self.lastDocument = (document.activeElement.contentWindow && document.activeElement.contentWindow.ownerDocument) || document;
+                console.log(e, (document.activeElement.contentWindow && document.activeElement.contentWindow.ownerDocument) ? "went with activeEment" : "went with regular wdocument")
                 timer = setTimeout(function () {
-                    self.checkSelection();
+                    self.checkSelection(self.lastDocument);
                 }, self.options.delay);
             };
 
             document.documentElement.addEventListener('mouseup', checkSelectionWrapper);
 
             for (i = 0; i < this.elements.length; i += 1) {
-                // this.elements[i].addEventListener('mouseup', this.checkSelectionWrapper);
+                this.elements[i].addEventListener('mouseup', checkSelectionWrapper);
                 this.elements[i].addEventListener('keyup', checkSelectionWrapper);
                 this.elements[i].addEventListener('blur', checkSelectionWrapper);
             }
             return this;
         },
 
-        checkSelection: function () {
+        checkSelection: function (argSelection) {
             var newSelection,
                 selectionElement;
-            console.log("checkSelection");
+            console.log("checkSelection", realWin().getSelection());
             if (this.keepToolbarAlive !== true && !this.options.disableToolbar) {
-                newSelection = (document.activeElement.contentWindow || window).getSelection();
+                newSelection = (argSelection || window).getSelection();
+                console.log(newSelection, argSelection, this.lastDocument)
                 if (newSelection.toString().trim() === '' ||
                     (this.options.allowMultiParagraphSelection === false && this.hasMultiParagraphs())) {
+                    console.log("not here plz")
                     this.hideToolbarActions();
                 } else {
-                    selectionElement = this.getSelectionElement();
+                    selectionElement = this.getSelectionElement((function (t) { return function() { return t; } })(realWin()));
                     if (!selectionElement || selectionElement.getAttribute('data-disable-toolbar')) {
+                        console.log("here?")
                         this.hideToolbarActions();
                     } else {
+                        console.log("cse: ", newSelection, selectionElement);
                         this.checkSelectionElement(newSelection, selectionElement);
                     }
                 }
@@ -566,10 +580,11 @@ if (typeof module === 'object') {
             var i;
             this.selection = newSelection;
             this.selectionRange = this.selection.getRangeAt(0);
+            console.log("ssR: ", this.selection, this.selectionRange);
             for (i = 0; i < this.elements.length; i += 1) {
                 if (this.elements[i] === selectionElement) {
                     this.setToolbarButtonStates()
-                        .setToolbarPosition()
+                        .setToolbarPosition(this.lastDocument)
                         .showToolbarActions();
                     return;
                 }
@@ -577,9 +592,9 @@ if (typeof module === 'object') {
             this.hideToolbarActions();
         },
 
-        getSelectionElement: function () {
+        getSelectionElement: function (realWin) {
 
-            var selection = (document.activeElement.contentWindow || window).getSelection(),
+            var selection = realWin().getSelection(),
                 range, current, parent,
                 result,
                 getMediumElement = function (e) {
@@ -595,6 +610,9 @@ if (typeof module === 'object') {
                 };
             // First try on current node
             try {
+                // if (selection.type === "None") {
+                //     selection = this.selection;
+                // }
                 range = selection.getRangeAt(0);
                 current = range.commonAncestorContainer;
                 parent = current.parentNode;
@@ -611,35 +629,39 @@ if (typeof module === 'object') {
             return result;
         },
 
-        setToolbarPosition: function () {
+        setToolbarPosition: function (theSelect) {
             var buttonHeight = 50,
-                realWin = (document.activeElement.contentWindow || window),
-                selection = realWin.getSelection(),
+                selection = (theSelect || realWin()).getSelection();
+                // if (selection.type === "None") {
+                //     selection = this.selection
+                // }
+                console.log("rwS: ", realWin(), selection, theSelect)
+            var
                 range = selection.getRangeAt(0),
                 boundary = range.getBoundingClientRect(),
                 defaultLeft = (this.options.diffLeft) - (this.toolbar.offsetWidth / 2),
                 middleBoundary = (boundary.left + boundary.right) / 2,
                 halfOffsetWidth = this.toolbar.offsetWidth / 2;
-
+            // console.log("stP: ", realWin(), selection, range)
             // console.log("setToolbarPosition", buttonHeight, selection, range, boundary, defaultLeft, middleBoundary, halfOffsetWidth)
 
             if (boundary.top < buttonHeight) {
                 this.toolbar.classList.add('medium-toolbar-arrow-over');
                 this.toolbar.classList.remove('medium-toolbar-arrow-under');
-                this.toolbar.style.top = document.activeElement.offsetTop + buttonHeight + boundary.bottom - this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
+                this.toolbar.style.top = document.activeElement.offsetTop + buttonHeight + boundary.bottom - this.options.diffTop + realWin().pageYOffset - this.toolbar.offsetHeight + 'px';
             } else {
                 this.toolbar.classList.add('medium-toolbar-arrow-under');
                 this.toolbar.classList.remove('medium-toolbar-arrow-over');
-                this.toolbar.style.top = document.activeElement.offsetTop + boundary.top + this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
+                this.toolbar.style.top = document.activeElement.offsetTop + boundary.top + this.options.diffTop + realWin().pageYOffset - this.toolbar.offsetHeight + 'px';
             }
             if (middleBoundary < halfOffsetWidth) {
                 this.toolbar.style.left = defaultLeft + halfOffsetWidth + 'px';
-            } else if ((realWin.innerWidth - middleBoundary) < halfOffsetWidth) {
-                this.toolbar.style.left = realWin.innerWidth + defaultLeft - halfOffsetWidth + 'px';
+            } else if ((realWin().innerWidth - middleBoundary) < halfOffsetWidth) {
+                this.toolbar.style.left = realWin().innerWidth + defaultLeft - halfOffsetWidth + 'px';
             } else {
                 this.toolbar.style.left = defaultLeft + middleBoundary + 'px';
             }
-            console.log(boundary.top, " ", realWin.pageYOffset);
+            // console.log(boundary.top, " ", realWin().pageYOffset);
 
             this.hideAnchorPreview();
 
@@ -702,7 +724,7 @@ if (typeof module === 'object') {
                 };
             for (i = 0; i < buttons.length; i += 1) {
                 // buttons[i].style.zIndex = 100;
-                buttons[i].addEventListener('click', triggerAction);
+                buttons[i].addEventListener('click', triggerAction, false);
             }
 
             this.setFirstAndLastItems(buttons);
@@ -718,9 +740,7 @@ if (typeof module === 'object') {
         },
 
         execAction: function (action, e) {
-
-            var realDocu = (document.activeElement.ownerDocument || document),
-                realWin = (document.activeElement.contentWindow || window);
+            console.log("execAction: ", action, e, realDoc(), realWin())
             if (action.indexOf('append-') > -1) {
                 this.execFormatBlock(action.replace('append-', ''));
                 this.setToolbarPosition();
@@ -728,9 +748,9 @@ if (typeof module === 'object') {
             } else if (action === 'anchor') {
                 this.triggerAnchorAction(e);
             } else if (action === 'image') {
-                realDocu.execCommand('insertImage', false, realWin.getSelection());
+                realDoc().execCommand('insertImage', false, realWin().getSelection());
             } else {
-                realDocu.execCommand(action, false, null);
+                realDoc().execCommand(action, false, null);
                 this.setToolbarPosition();
             }
         },
@@ -757,12 +777,11 @@ if (typeof module === 'object') {
         },
 
         triggerAnchorAction: function () {
-            var realDocu = (document.activeElement.ownerDocument || document),
-                selectedParentElement = this.getSelectedParentElement();
+            var selectedParentElement = this.getSelectedParentElement();
 
             if (selectedParentElement.tagName &&
                     selectedParentElement.tagName.toLowerCase() === 'a') {
-                realDocu.execCommand('unlink', false, null);
+                realDoc().execCommand('unlink', false, null);
             } else {
                 if (this.anchorForm.style.display === 'block') {
                     this.showToolbarActions();
@@ -774,15 +793,14 @@ if (typeof module === 'object') {
         },
 
         execFormatBlock: function (el) {
-            var realDocu = (document.activeElement.ownerDocument || document),
-                selectionData = this.getSelectionData(this.selection.anchorNode);
+            var selectionData = this.getSelectionData(this.selection.anchorNode);
 
             // FF handles blockquote differently on formatBlock
             // allowing nesting, we need to use outdent
             // https://developer.mozilla.org/en-US/docs/Rich-Text_Editing_in_Mozilla
             if (el === 'blockquote' && selectionData.el &&
                 selectionData.el.parentNode.tagName.toLowerCase() === 'blockquote') {
-                return realDocu.execCommand('outdent', false, null);
+                return realDoc().execCommand('outdent', false, null);
             }
             if (selectionData.tagName === el) {
                 el = 'p';
@@ -793,11 +811,11 @@ if (typeof module === 'object') {
             // http://stackoverflow.com/questions/1816223/rich-text-editor-with-blockquote-function/1821777#1821777
             if (this.isIE) {
                 if (el === 'blockquote') {
-                    return realDocu.execCommand('indent', false, el);
+                    return realDoc().execCommand('indent', false, el);
                 }
                 el = '<' + el + '>';
             }
-            return realDocu.execCommand('formatBlock', false, el);
+            return realDoc().execCommand('formatBlock', false, el);
         },
 
         getSelectionData: function (el) {
@@ -912,8 +930,7 @@ if (typeof module === 'object') {
                 middleBoundary = (boundary.left + boundary.right) / 2,
                 halfOffsetWidth,
                 defaultLeft,
-                timer,
-                realWin = (document.activeElement.contentWindow || window);
+                timer;
 
             self.anchorPreview.querySelector('i').textContent = anchorEl.href;
             halfOffsetWidth = self.anchorPreview.offsetWidth / 2;
@@ -931,11 +948,11 @@ if (typeof module === 'object') {
             self.anchorPreview.classList.add('medium-toolbar-arrow-over');
             self.anchorPreview.classList.remove('medium-toolbar-arrow-under');
 
-            self.anchorPreview.style.top = Math.round(buttonHeight + boundary.bottom - self.options.diffTop + realWin.pageYOffset - self.anchorPreview.offsetHeight) + 'px';
+            self.anchorPreview.style.top = Math.round(buttonHeight + boundary.bottom - self.options.diffTop + realWin().pageYOffset - self.anchorPreview.offsetHeight) + 'px';
             if (middleBoundary < halfOffsetWidth) {
                 self.anchorPreview.style.left = defaultLeft + halfOffsetWidth + 'px';
-            } else if ((realWin.innerWidth - middleBoundary) < halfOffsetWidth) {
-                self.anchorPreview.style.left = realWin.innerWidth + defaultLeft - halfOffsetWidth + 'px';
+            } else if ((realWin().innerWidth - middleBoundary) < halfOffsetWidth) {
+                self.anchorPreview.style.left = realWin().innerWidth + defaultLeft - halfOffsetWidth + 'px';
             } else {
                 self.anchorPreview.style.left = defaultLeft + middleBoundary + 'px';
             }
@@ -984,8 +1001,7 @@ if (typeof module === 'object') {
 
         createAnchorPreview: function () {
             var self = this,
-                realDocu = (document.activeElement.ownerDocument || document),
-                anchorPreview = realDocu.createElement('div');
+                anchorPreview = realDoc().createElement('div');
 
             anchorPreview.id = 'medium-editor-anchor-preview-' + this.id;
             anchorPreview.className = 'medium-editor-anchor-preview';
@@ -1009,10 +1025,8 @@ if (typeof module === 'object') {
             if (this.activeAnchor) {
 
                 var self = this,
-                    realDocu = (document.activeElement.ownerDocument || document),
-                    realWin = (document.activeElement.contentWindow || window),
-                    range = realDocu.createRange(),
-                    sel = realWin.getSelection();
+                    range = realDoc().createRange(),
+                    sel = realWin().getSelection();
 
                 range.selectNodeContents(self.activeAnchor);
                 sel.removeAllRanges();
@@ -1096,7 +1110,7 @@ if (typeof module === 'object') {
         },
 
         createLink: function (input) {
-            var realDocu = this.options.elementsContainer.ownerDocument;
+            var realDoc = this.options.elementsContainer.ownerDocument;
             if (input.value.trim().length === 0) {
                 this.hideToolbarActions();
                 return;
@@ -1106,7 +1120,7 @@ if (typeof module === 'object') {
                 input.value = this.checkLinkFormat(input.value);
             }
 
-            realDocu.execCommand('createLink', false, input.value);
+            realDoc().execCommand('createLink', false, input.value);
             if (this.options.targetBlank) {
                 this.setTargetBlank();
             }
@@ -1117,8 +1131,7 @@ if (typeof module === 'object') {
 
         bindWindowActions: function () {
             var timerResize,
-                self = this,
-                realWin = (document.activeElement.contentWindow || window);
+                self = this;
 
             this.windowResizeHandler = function () {
                 clearTimeout(timerResize);
@@ -1129,7 +1142,7 @@ if (typeof module === 'object') {
                 }, 100);
             };
 
-            realWin.addEventListener('resize', self.windowResizeHandler);
+            realWin().addEventListener('resize', self.windowResizeHandler);
             // window.addEventListener('resize', self.windowResizeHandler);
             return this;
         },
@@ -1183,7 +1196,7 @@ if (typeof module === 'object') {
                 var paragraphs,
                     html = '',
                     p,
-                    realDocu = self.options.elementsContainer.ownerDocument;
+                    realDoc = self.options.elementsContainer.ownerDocument;
 
                 this.classList.remove('medium-editor-placeholder');
                 if (!self.options.forcePlainText && !self.options.cleanPastedHTML) {
@@ -1207,9 +1220,9 @@ if (typeof module === 'object') {
                                 }
                             }
                         }
-                        realDocu.execCommand('insertHTML', false, html);
+                        realDoc().execCommand('insertHTML', false, html);
                     } else {
-                        realDocu.execCommand('insertHTML', false, e.clipboardData.getData('text/plain'));
+                        realDoc().execCommand('insertHTML', false, e.clipboardData.getData('text/plain'));
                     }
                 }
             };
@@ -1254,7 +1267,6 @@ if (typeof module === 'object') {
             var i, elList, workEl,
                 el = this.getSelectionElement(),
                 multiline = /<p|<br|<div/.test(text),
-                realDocu = this.options.elementsContainer.ownerDocument,
                 replacements = [
 
                     // replace two bogus tags that begin pastes from google docs
@@ -1293,7 +1305,7 @@ if (typeof module === 'object') {
                 elList = text.split('<br><br>');
 
                 this.pasteHTML('<p>' + elList.join('</p><p>') + '</p>');
-                realDocu.execCommand('insertText', false, "\n");
+                realDoc().execCommand('insertText', false, "\n");
 
                 // block element cleanup
                 elList = el.querySelectorAll('p,div,br');
@@ -1324,7 +1336,7 @@ if (typeof module === 'object') {
 
         pasteHTML: function (html) {
             var elList, workEl, i, fragmentBody, pasteBlock = document.createDocumentFragment(),
-                realDocu = this.options.elementsContainer.ownerDocument;
+                realDoc = this.options.elementsContainer.ownerDocument;
 
             pasteBlock.appendChild(document.createElement('body'));
 
@@ -1348,7 +1360,7 @@ if (typeof module === 'object') {
                 }
 
             }
-            realDocu.execCommand('insertHTML', false, fragmentBody.innerHTML.replace(/&nbsp;/g, ' '));
+            realDoc().execCommand('insertHTML', false, fragmentBody.innerHTML.replace(/&nbsp;/g, ' '));
         },
         isCommonBlock: function (el) {
             return (el && (el.tagName.toLowerCase() === 'p' || el.tagName.toLowerCase() === 'div'));
