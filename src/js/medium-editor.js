@@ -2,7 +2,7 @@
 
 function MediumEditor(elements, options) {
     'use strict';
-    return this.init(elements, options);
+    this.init(elements, options);
 }
 
 if (typeof module === 'object') {
@@ -13,18 +13,21 @@ if (typeof module === 'object') {
     'use strict';
 
     function realDoc() {
-        var isIFrame = document.activeElement.contentWindow;
-        if (isIFrame) {
-            return isIFrame.document;
-        }
-        return document;
+        return document.querySelector("iframe#output").contentWindow.document || document;
+        // var isIFrame = document.activeElement.contentWindow;
+        // if (isIFrame) {
+        //     return isIFrame.document;
+        // }
+        // return document;
     }
     function realWin() {
-        var isIFrame = document.activeElement.contentWindow;
-        if (isIFrame) {
-            return isIFrame;
-        }
-        return window;
+        return document.querySelector("iframe#output").contentWindow || window;
+
+        // var isIFrame = document.activeElement.contentWindow;
+        // if (isIFrame) {
+        //     return isIFrame;
+        // }
+        // return window;
     }
 
     function extend(b, a) {
@@ -149,7 +152,6 @@ if (typeof module === 'object') {
             }
             this.parentElements = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre'];
             this.id = (options && options.elementsContainer ? options.elementsContainer.ownerDocument : document).querySelectorAll('.medium-editor-toolbar').length + 1;
-            // this.id = document.querySelectorAll('.medium-editor-toolbar').length + 1;
             this.options = extend(options, this.defaults);
             return this.setup();
         },
@@ -200,8 +202,8 @@ if (typeof module === 'object') {
         },
 
         updateElementList: function () {
-            this.elements = typeof this.elementSelection === 'string' ? (document.activeElement.ownerDocument || document).querySelectorAll(this.elementSelection) : this.elementSelection;
-            // this.elements = typeof this.elementSelection === 'string' ? (document.querySelectorAll(this.elementSelection)) : this.elementSelection;
+            // this.elements = typeof this.elementSelection === 'string' ? (document.activeElement.ownerDocument || document).querySelectorAll(this.elementSelection) : this.elementSelection;
+            this.elements = typeof this.elementSelection === 'string' ? document.querySelectorAll(this.elementSelection) : this.elementSelection;
 
             if (this.elements.nodeType === 1) {
                 this.elements = [this.elements];
@@ -516,11 +518,7 @@ if (typeof module === 'object') {
                 if (e && self.clickingIntoArchorForm(e)) {
                     return false;
                 }
-                console.log('checkSelectionWrapper', e, document.activeElement, realDoc(), realWin())
                 clearTimeout(timer);
-                var t = realWin();
-                self.lastDocument = (document.activeElement.contentWindow && document.activeElement.contentWindow.ownerDocument) || document;
-                console.log(e, (document.activeElement.contentWindow && document.activeElement.contentWindow.ownerDocument) ? "went with activeEment" : "went with regular wdocument")
                 timer = setTimeout(function () {
                     self.checkSelection(self.lastDocument);
                 }, self.options.delay);
@@ -531,7 +529,7 @@ if (typeof module === 'object') {
             for (i = 0; i < this.elements.length; i += 1) {
                 this.elements[i].addEventListener('mouseup', checkSelectionWrapper);
                 this.elements[i].addEventListener('keyup', checkSelectionWrapper);
-                this.elements[i].addEventListener('blur', checkSelectionWrapper);
+                // this.elements[i].addEventListener('blur', checkSelectionWrapper);
             }
             return this;
         },
@@ -540,9 +538,10 @@ if (typeof module === 'object') {
             var newSelection,
                 selectionElement;
             console.log("checkSelection", realWin().getSelection());
+            // console.log("checkSelection")
             if (this.keepToolbarAlive !== true && !this.options.disableToolbar) {
-                newSelection = (argSelection || window).getSelection();
-                console.log(newSelection, argSelection, this.lastDocument)
+                newSelection = realWin().getSelection();
+                // console.log(newSelection, argSelection)
                 if (newSelection.toString().trim() === '' ||
                     (this.options.allowMultiParagraphSelection === false && this.hasMultiParagraphs())) {
                     console.log("not here plz")
@@ -584,12 +583,17 @@ if (typeof module === 'object') {
             for (i = 0; i < this.elements.length; i += 1) {
                 if (this.elements[i] === selectionElement) {
                     this.setToolbarButtonStates()
-                        .setToolbarPosition(this.lastDocument)
+                        .setToolbarPosition()
                         .showToolbarActions();
                     return;
                 }
             }
             this.hideToolbarActions();
+        },
+
+        rememberSelection: function() {
+            this.saveSelection();
+            return this;
         },
 
         getSelectionElement: function (realWin) {
@@ -610,9 +614,6 @@ if (typeof module === 'object') {
                 };
             // First try on current node
             try {
-                // if (selection.type === "None") {
-                //     selection = this.selection;
-                // }
                 range = selection.getRangeAt(0);
                 current = range.commonAncestorContainer;
                 parent = current.parentNode;
@@ -629,13 +630,13 @@ if (typeof module === 'object') {
             return result;
         },
 
-        setToolbarPosition: function (theSelect) {
+        setToolbarPosition: function () {
             var buttonHeight = 50,
-                selection = (theSelect || realWin()).getSelection();
+                selection = realWin().getSelection();
                 // if (selection.type === "None") {
                 //     selection = this.selection
                 // }
-                console.log("rwS: ", realWin(), selection, theSelect)
+                console.log("rwS: ", realWin(), selection)
             var
                 range = selection.getRangeAt(0),
                 boundary = range.getBoundingClientRect(),
@@ -667,6 +668,50 @@ if (typeof module === 'object') {
 
             return this;
         },
+
+        // setToolbarPosition: function () {
+        //     var buttonHeight = 50,
+        //         selection = (document.activeElement.contentWindow || window).getSelection();
+        //         selection = document.querySelector("iframe#output").contentWindow.getSelection();
+
+        //     console.log("STPSelect: ", selection)
+
+        //     var
+        //         range = selection.getRangeAt(0),
+        //         boundary = range.getBoundingClientRect(),
+        //         defaultLeft = (this.options.diffLeft) - (this.toolbar.offsetWidth / 2),
+        //         middleBoundary = (boundary.left + boundary.right) / 2,
+        //         halfOffsetWidth = this.toolbar.offsetWidth / 2;
+
+        //     var realWin = (window),
+        //         eleBounds = document.activeElement.getBoundingClientRect();
+        //     if (boundary.top < buttonHeight) {
+        //         // console.log("1")
+        //         this.toolbar.classList.add('medium-toolbar-arrow-over');
+        //         this.toolbar.classList.remove('medium-toolbar-arrow-under');
+        //         this.toolbar.style.top = eleBounds.top + buttonHeight + boundary.bottom - this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
+        //     } else {
+        //         // console.log("2")
+        //         this.toolbar.classList.add('medium-toolbar-arrow-under');
+        //         this.toolbar.classList.remove('medium-toolbar-arrow-over');
+        //         this.toolbar.style.top = eleBounds.top + boundary.top + this.options.diffTop + realWin.pageYOffset - this.toolbar.offsetHeight + 'px';
+        //     }
+        //     if (middleBoundary < halfOffsetWidth) {
+        //         // console.log("3")
+        //         this.toolbar.style.left = eleBounds.left + defaultLeft + halfOffsetWidth + 'px';
+        //     } else if ((realWin.innerWidth - middleBoundary) < halfOffsetWidth) {
+        //         // console.log("4")
+        //         this.toolbar.style.left = eleBounds.left + realWin.innerWidth + defaultLeft - halfOffsetWidth + 'px';
+        //     } else {
+        //         // console.log("5")
+        //         this.toolbar.style.left = eleBounds.left + defaultLeft + middleBoundary + 'px';
+        //     }
+        //     console.log("daecw",  document.activeElement.offsetTop, eleBounds.left)
+
+        //     this.hideAnchorPreview();
+
+        //     return this;
+        // },
 
         setToolbarButtonStates: function () {
             var buttons = this.toolbarActions.querySelectorAll('button'),
@@ -750,6 +795,7 @@ if (typeof module === 'object') {
             } else if (action === 'image') {
                 realDoc().execCommand('insertImage', false, realWin().getSelection());
             } else {
+                console.log("execuing ", action, " on ", realDoc(), document.querySelector("iframe#output").ownerDocument)
                 realDoc().execCommand(action, false, null);
                 this.setToolbarPosition();
             }

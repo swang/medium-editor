@@ -1,0 +1,59 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>medium editor | demo</title>
+    <!--link rel="stylesheet" href="css/demo.css"-->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link rel="stylesheet" href="./dist/css/medium-editor.css">
+    <link rel="stylesheet" href="./dist/css/themes/default.css">
+<style>
+.editable,
+.secondEditable
+ {
+    outline: none;
+    margin: 0 0 20px 0;
+    padding: 0 0 20px 0;
+    border-bottom: 1px solid #dbdbdb;
+}
+</style>
+</head>
+
+
+<body>
+<div class="editable" spellcheck="false">
+<p>s Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin augue lacus, fermentum non dictum luctus, egestas vitae urna. Etiam ipsum orci, ullamcorper et pellentesque nec, auctor ac erat. Sed mollis sem at dui tincidunt rutrum. Cras in erat gravida, pretium diam non, rhoncus risus. Fusce purus lacus, fermentum sed quam eget, luctus feugiat nisl. Mauris laoreet pellentesque est sit amet vehicula. Nulla feugiat commodo lobortis. Praesent ligula mi, rhoncus ac quam vel, consectetur laoreet neque. Donec varius in sem at pellentesque. Nulla nec suscipit nisl. Fusce luctus diam eget dapibus porta. Donec semper porttitor lobortis. In fringilla convallis nunc ac tincidunt. Proin faucibus sed sem vel tincidunt.</p>
+
+<p>Sed vehicula ullamcorper orci, vitae varius leo varius gravida. Sed turpis magna, porttitor sed urna vel, blandit placerat ipsum. Suspendisse ut urna vehicula, vestibulum lacus vitae, dignissim velit. Proin enim velit, porttitor ultricies elementum sit amet, laoreet non leo. Morbi tincidunt facilisis dui a rhoncus. Nunc molestie nisl vitae luctus imperdiet. Donec id velit nibh. Integer a metus sodales, egestas nisl vitae, pellentesque nulla. Maecenas aliquet iaculis dignissim.</p>
+
+<p>Vestibulum tempus velit ipsum, vel auctor nisl tristique in. Phasellus porttitor scelerisque quam, vitae posuere ante egestas in. Maecenas commodo eros faucibus erat ultrices, non aliquam enim vulputate. Sed tincidunt dolor eu mi consequat, ut accumsan dui placerat. Nullam dapibus lacinia eros, at vulputate risus lobortis sed. In placerat at metus eu congue. Aenean at vehicula mauris.</p>
+
+<p>Sed vestibulum turpis non neque posuere ullamcorper. Cras eu pulvinar erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Fusce pretium libero vitae felis lobortis, eu suscipit metus pharetra. In pulvinar velit diam, at consectetur dolor semper quis. Proin suscipit diam ac ipsum faucibus auctor. Cras venenatis, ante non accumsan aliquam, ante justo tincidunt mi, id malesuada metus dolor at urna. Aenean aliquet felis ipsum, eu iaculis enim dapibus in. Nunc gravida mauris a arcu ultrices aliquam. Duis quis ante vitae odio vulputate vestibulum in ac erat. Aenean hendrerit vitae massa dictum consectetur. Suspendisse porta sollicitudin justo, porttitor venenatis massa ultricies at. Sed in rhoncus eros.</p>
+
+<p>Donec a purus rhoncus, interdum mauris id, aliquet arcu. Curabitur sollicitudin augue et lacus fringilla, quis varius quam volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed at massa ac libero placerat facilisis ut in sem. Pellentesque mi lectus, vulputate at iaculis at, ullamcorper sed erat. Donec viverra sagittis lorem nec eleifend. Nulla convallis in risus eget condimentum. Cras eu diam pellentesque, laoreet diam nec, pulvinar dolor. Mauris ut turpis eget lectus placerat pellentesque. Etiam vitae sem bibendum, eleifend mauris quis, luctus orci. Vestibulum semper tortor sapien, eu pretium dolor egestas non. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam eu nunc vitae erat scelerisque interdum eu eget dolor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Aliquam auctor laoreet velit, nec dignissim nunc aliquam et.</p>
+</div>
+
+
+
+    <iframe sandbox='allow-scripts allow-same-origin' style="background: #aafcaa; border: 1px solid black;" id="output" width="100%"></iframe>
+
+    <script src="./src/js/medium-editor.js"></script>
+    <script>
+        // var editor = new MediumEditor('.editable22', {
+        //     elementsContainer: function() { return document.querySelector("#ttt").contentWindow.body },
+        //     buttonLabels: 'fontawesome'
+        // });
+    </script>
+
+    <script>
+    // Create a new blank iframe
+    var newIframe = document.querySelector("iframe#output").contentDocument.querySelector("body").innerHTML = "<div class='editable22'><p>Sed eget gravida nisi. Quisque et neque nisi. Etiam nulla augue, ultrices at nunc id, interdum venenatis lacus. Morbi pretium et lorem at tristique. Vestibulum malesuada magna interdum turpis interdum, ut volutpat purus rutrum. Sed tincidunt, ipsum eget tempus luctus, magna velit viverra nisi, vitae convallis eros ligula vitae purus. Etiam rhoncus sapien sit amet neque consectetur pharetra. Ut placerat velit mi, tempor lacinia erat cursus nec. Phasellus eu cursus lectus. Curabitur vestibulum metus sit amet eros egestas tincidunt.</p><p>Sed eget gravida nisi. Quisque et neque nisi. Etiam nulla augue, ultrices at nunc id, interdum venenatis lacus. Morbi pretium et lorem at tristique. Vestibulum malesuada magna interdum turpis interdum, ut volutpat purus rutrum. Sed tincidunt, ipsum eget tempus luctus, magna velit viverra nisi, vitae convallis eros ligula vitae purus. Etiam rhoncus sapien sit amet neque consectetur pharetra. Ut placerat velit mi, tempor lacinia erat cursus nec. Phasellus eu cursus lectus. Curabitur vestibulum metus sit amet eros egestas tincidunt.</p><p>Sed eget gravida nisi. Quisque et neque nisi. Etiam nulla augue, ultrices at nunc id, interdum venenatis lacus. Morbi pretium et lorem at tristique. Vestibulum malesuada magna interdum turpis interdum, ut volutpat purus rutrum. Sed tincidunt, ipsum eget tempus luctus, magna velit viverra nisi, vitae convallis eros ligula vitae purus. Etiam rhoncus sapien sit amet neque consectetur pharetra. Ut placerat velit mi, tempor lacinia erat cursus nec. Phasellus eu cursus lectus. Curabitur vestibulum metus sit amet eros egestas tincidunt.</p></div>";
+    var editor = new MediumEditor(
+            [document.querySelector("iframe#output").contentDocument.querySelector(".editable22")
+            , document.querySelector(".editable")]
+        );
+    </script>
+
+    <!--iframe  sandbox='allow-scripts' src="http://localhost:8080/" id="oob" style="background: #aafcaa; border: 1px solid black" width="100%"></iframe-->
+</body>
+
+</html>
